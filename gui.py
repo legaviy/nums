@@ -9,10 +9,8 @@ from kivy.uix.label import Label
 from kivy_modalview import ModalView
 from kivy.config import Config
 
-from cfg import SIGN_ALPHABET, LATIN_ALPHABET
+from cfg import LATIN_ALPHABET
 from numb import _nums
-
-Config.set('input', 'mouse', 'mouse,disable_multitouch')
 
 class KeyboardButton(Button):
     def __init__(self, text):
@@ -74,7 +72,7 @@ class ModalviewIntTextinput(TextInput):
         self.saved_value = ''
 
     def on_text(self, instance, value):
-        if len(value) < 3:
+        if len(value) < 3 and not '\n' in value:
             self.saved_value = value
         else:
             self.text = self.saved_value
@@ -192,7 +190,7 @@ class MainApp(App):
 
     def on_keyboard_btn_press(self, instance):
         value = instance.text
-        if value in LATIN_ALPHABET + SIGN_ALPHABET and self._interface_.is_numb:
+        if value in LATIN_ALPHABET + [str(x) for x in range(10)] and self._interface_.is_numb:
             if not _nums._num_is_valid_for_nums(value, self._interface_.signs[self._interface_.cursor].nums) == True:
                 return
         self._interface_._input('**' if value == '^' else value)
@@ -218,7 +216,10 @@ class MainApp(App):
             self.output()
 
     def convert_nums(self):
-        nums = int(self.convertion_mv_ti.text)
+        nums = self.convertion_mv_ti.text
+        if nums == '':
+            return
+        nums = int(nums)
         if 1 < nums < 37 and self._interface_.is_numb:
             self._interface_._convert_nums(nums)
             self.convertion_mv.dismiss_mv()
