@@ -30,43 +30,8 @@ def conv_to(num, nums1, nums2):
     return conv_dec_to(conv_to_dec(get_numb(num, nums1)), nums2)
 
 i = _interface_
-i._input(2)
-i._input(8)
-i._offset()
-i._input(1)
-i._input(2)
-i._input(5)
-
-i._offset()
-i._input('-')
-
-i._change_nums(2)
-i._input(1)
-i._input(0)
-i._input(1)
-i._input(0)
-i._offset()
-i._input(0)
-i._input(0)
-i._input(1)
-
-i._offset()
-i._input('*')
-i._input('(')
-
-i._change_nums(16)
-i._input('A')
-i._input('C')
-
-i._offset()
-i._offset()
+i._offset(False)
 i._input('+')
-
-i._change_nums(36)
-i._input('Z')
-i._offset()
-i._offset()
-i._input(')')
 # print('-----------------')
 i._print_signs()
-print(' =', _commander_._execute_interface_expression(_interface_))
+# print(' =', _commander_._execute_interface_expression(_interface_))

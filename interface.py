@@ -1,4 +1,5 @@
-from numb import _numb, _nums, COMMANDS_ALLOWED, BRACKETS, WrongNumeralSystem, WrongSignForNumeralSystem, NotEnoughArgumentsException
+from numb import _numb, _nums
+from cfg import COMMANDS_ALLOWED, BRACKETS, WrongNumeralSystem, WrongSignForNumeralSystem, NotEnoughArgumentsException
 
 class _command_execution: # выполнение команды, включающее в себя команда, два соответсвтующее ей операнда, и результат операции
     command = None
@@ -87,7 +88,7 @@ class _commander: # класс выполнения выражений и ари
         polynom = self._execute_polynom_by_sign(['*', '/'], polynom)
         result = self._execute_polynom_by_sign(['+', '-'], polynom)[0]
         return result[0]
-        # преобразовано в следующую строку
+         преобразовано в следующую строку
         """ 
         return self._execute_polynom_by_sign(['+', '-'], self._execute_polynom_by_sign(['*', '/'], self._execute_polynom_by_sign(['**'], polynom)))[0]
 
@@ -97,6 +98,7 @@ class _commander: # класс выполнения выражений и ари
         for sign in expression:
             s = s + str(sign)
         print(s)
+        return s
 
     def _execute_interface_expression(self, interface): # выполнить сложное выражение
         expression = interface.signs
@@ -165,6 +167,7 @@ class _interface: # класс ввода выражения
         for sign in self.signs:
             s = s + str(sign) + ' '
         print(s)
+        return s[:-1]
 
     def _clear(self): # очистить строку
         self.signs = [_numb(0)]
@@ -231,6 +234,9 @@ class _interface: # класс ввода выражения
                     self.numbcursor = len(self.signs[self.subcursor].frct)
                     self.is_frct = True
 
+    def _offset_left(self):
+        self._offset(False)
+
     def _input(self, val): # добавить знак/цифру
         val = str(val).upper()
         if self.subcursor > self.cursor and val in BRACKETS + COMMANDS_ALLOWED: # если курсор находится между знаками (не для цифр)
@@ -253,32 +259,36 @@ class _interface: # класс ввода выражения
             else: # если курсор находится не на числе
                 if val in COMMANDS_ALLOWED + BRACKETS: # не для цифр
                     self.signs[self.cursor] = val # заменить текущий знак на val
-                    self.subcursor += 1 # сдвинуть курсор между вставленным и следующем знаком
-                    self.cursor += 1
+                    self.numbcursor = 0
+                    self.is_numb = False
+                    self.is_frct = False
+                    # self.subcursor += 1 # сдвинуть курсор между вставленным и следующем знаком
+                    # self.cursor += 1
 
     def _delete(self): # удалить знак/цифру
-        if self.is_numb and self.numbcursor > 0: # если курсор на конкретном числе и не в начале его целой/дробной части
-            current_numb = self.signs[self.cursor]
-            if self.is_frct:
-                current_numb.frct.pop(self.numbcursor - 1) # удалить предыдущую цифру в части дробной
+        if self.cursor > -1:
+            if self.is_numb and self.numbcursor > 0: # если курсор на конкретном числе и не в начале его целой/дробной части
+                current_numb = self.signs[self.cursor]
+                if self.is_frct:
+                    current_numb.frct.pop(self.numbcursor - 1) # удалить предыдущую цифру в части дробной
+                else:
+                    current_numb.intg.pop(self.numbcursor - 1) # удалить предыдущую цифру в части целой
+                self.numbcursor -= 1 # сместить курсор влево
             else:
-                current_numb.intg.pop(self.numbcursor - 1) # удалить предыдущую цифру в части целой
-            self.numbcursor -= 1 # сместить курсор влево
-        else:
-            if self.cursor == self.subcursor: # если курсор находится на конкретном знаке
-                self.signs.pop(self.cursor) # удалить знак из списка
-                if self.cursor == 0: # если курсор находится в начале строки
-                    self._clear()
-                else:
-                    self.cursor -= 1 # сместить курсор в предыдущий промежуток
-            elif self.subcursor > self.cursor: # если курсор находится в промежутке
-                self.signs.pop(self.cursor) # удалить знак из списка
-                if self.cursor == 0: # если курсор находится в начале строки
-                    self._clear()
-                else:
-                    # сместить курсор в предыдущий промежуток
-                    self.cursor -= 1
-                    self.subcursor -= 1
+                if self.cursor == self.subcursor: # если курсор находится на конкретном знаке
+                    self.signs.pop(self.cursor) # удалить знак из списка
+                    if self.cursor == 0: # если курсор находится в начале строки
+                        self._clear()
+                    else:
+                        self.cursor -= 1 # сместить курсор в предыдущий промежуток
+                elif self.subcursor > self.cursor: # если курсор находится в промежутке
+                    self.signs.pop(self.cursor) # удалить знак из списка
+                    if self.cursor == 0: # если курсор находится в начале строки
+                        self._clear()
+                    else:
+                        # сместить курсор в предыдущий промежуток
+                        self.cursor -= 1
+                        self.subcursor -= 1
                 
     def _change_nums(self, nums): # сменить СС текущего числа ИЛИ добавить число в промежуток с nums-СС
         if nums > 1 and nums < 37:
