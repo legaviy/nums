@@ -175,8 +175,8 @@ class _nums: # класс статических методов для пере�
             raise WrongNumeralSystem('2-36', nums)
 
     @staticmethod
-    def _num_is_valid_for_nums(num, nums): # входят ли знаки числа num в алфавит nums-СС
-        num = str(num).replace('-', '').replace(',', '.').replace('.', '').upper()
+    def _num_is_valid_for_nums(numb, nums): # входят ли знаки числа num в алфавит nums-СС
+        num = (numb._get_intg_str() + numb._get_frct_str()) if type(numb).__name__ == '_numb' else str(numb).replace('-', '').replace(',', '.').replace('.', '').upper()
         if len(num) == 0:
             return False 
         alphabet = _nums._get_nums_alphabet(nums)

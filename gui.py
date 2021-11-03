@@ -9,9 +9,9 @@ from kivy.uix.label import Label
 from kivy_modalview import ModalView
 from kivy.config import Config
 
-Config.set('graphics', 'width', 900)
-Config.set('graphics', 'height', 1600)
-Config.set('graphics', 'resizable', 0)
+from cfg import SIGN_ALPHABET, LATIN_ALPHABET
+from numb import _nums
+
 Config.set('input', 'mouse', 'mouse,disable_multitouch')
 
 class KeyboardButton(Button):
@@ -101,6 +101,8 @@ class MainApp(App):
         self.cursor_offset_left_btn.on_release = self.offset_left
         self.cursor_offset_right_btn.on_release = self.offset_right
         self.backspace_btn.on_release = self.backspace
+        self.convertion_mv.btn_ok.on_release = self.convert_nums
+        self.changing_mv.btn_ok.on_release = self.change_nums
 
         self.output()
 
@@ -185,11 +187,15 @@ class MainApp(App):
                 self.keyboard_gl.add_widget(Widget())
             else:
                 btn = KeyboardButton(str(key))
-                btn.bind(on_press=self.on_keyboard_btn_press)
+                btn.bind(on_release=self.on_keyboard_btn_press)
                 self.keyboard_gl.add_widget(btn)
 
     def on_keyboard_btn_press(self, instance):
-        self._interface_._input('**' if instance.text == '^' else instance.text)
+        value = instance.text
+        if value in LATIN_ALPHABET + SIGN_ALPHABET and self._interface_.is_numb:
+            if not _nums._num_is_valid_for_nums(value, self._interface_.signs[self._interface_.cursor].nums) == True:
+                return
+        self._interface_._input('**' if value == '^' else value)
         self.output()
 
     def offset_left(self):
@@ -204,6 +210,19 @@ class MainApp(App):
         self._interface_._delete()
         self.output()
 
+    def change_nums(self):
+        nums = int(self.changing_mv_ti.text)
+        if 1 < nums < 37:
+            self._interface_._change_nums(nums)
+            self.changing_mv.dismiss_mv()
+            self.output()
+
+    def convert_nums(self):
+        nums = int(self.convertion_mv_ti.text)
+        if 1 < nums < 37 and self._interface_.is_numb:
+            self._interface_._convert_nums(nums)
+            self.convertion_mv.dismiss_mv()
+            self.output()
 
     def output(self):
         text = ''
@@ -221,6 +240,7 @@ class MainApp(App):
                 text = text if text[-2:] == CURSOR_SIGN + ' '  else f'{text} {CURSOR_SIGN} '
             if cursor == subcursor == i:
                 if is_numb:
+                    text = f'{text} '
                     if is_frct:
                         text = f'{text}{sign._get_intg_str()},'
                         frct = sign.frct
@@ -250,8 +270,6 @@ class MainApp(App):
                 text = f'{text} {sign}'
             if subcursor > cursor and cursor == i:
                 text = f'{text} {CURSOR_SIGN} '
-        
-        print(cursor, subcursor, numbcursor)
 
         self.line_ti.text = text
         return text

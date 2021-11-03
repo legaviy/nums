@@ -253,6 +253,7 @@ class _interface: # класс ввода выражения
                 else: # если курсор в целой части числа
                     if current_numb._get_intg_str() == '0': # если целая часть числа равна нулю
                         current_numb.intg[0] = val # заменить ноль в целой части на val
+                        self.numbcursor = 0
                     else:
                         current_numb.intg.insert(self.numbcursor, val) # вставить в целую часть val на месте self.numbcursor
                 self.numbcursor += 1 # переместить numbcursor после добавленной цифры
@@ -277,13 +278,13 @@ class _interface: # класс ввода выражения
             else:
                 if self.cursor == self.subcursor: # если курсор находится на конкретном знаке
                     self.signs.pop(self.cursor) # удалить знак из списка
-                    if self.cursor == 0: # если курсор находится в начале строки
+                    if self.cursor == 0 and len(self.signs) == 0: # если курсор находится в начале строки
                         self._clear()
                     else:
                         self.cursor -= 1 # сместить курсор в предыдущий промежуток
                 elif self.subcursor > self.cursor: # если курсор находится в промежутке
                     self.signs.pop(self.cursor) # удалить знак из списка
-                    if self.cursor == 0: # если курсор находится в начале строки
+                    if self.cursor == 0 and len(self.signs) == 0: # если курсор находится в начале строки
                         self._clear()
                     else:
                         # сместить курсор в предыдущий промежуток
@@ -291,11 +292,11 @@ class _interface: # класс ввода выражения
                         self.subcursor -= 1
                 
     def _change_nums(self, nums): # сменить СС текущего числа ИЛИ добавить число в промежуток с nums-СС
-        if nums > 1 and nums < 37:
-            if self.cursor == self.subcursor and self.is_numb and _nums._num_is_valid_for_nums(self.signs[self.cursor], nums): # если курсор находится (на знаке И на числе) И переводимое число подходит для nums-СС
+        if 1 < nums < 37:
+            if self.is_numb and _nums._num_is_valid_for_nums(self.signs[self.cursor], nums) == True: # если курсор находится (на знаке И на числе) И переводимое число подходит для nums-СС
                 self.signs[self.cursor].nums = nums # сменить СС текущего числа
             elif self.subcursor > self.cursor: # если курсор находится между знаками
-                numb = _numb('0.0')
+                numb = _numb(0)
                 numb.nums = int(nums)
                 self.signs.insert(self.subcursor, numb) # добавить numb между вставленным числом и следующем знаком
                 self.cursor += 1 # переместить курсор на добавленное число
@@ -306,7 +307,7 @@ class _interface: # класс ввода выражения
             raise(WrongNumeralSystem('2-36', nums))
     
     def _convert_nums(self, nums): # конвертировать экземпляр числа, на котором находится курсор, в nums-СС
-        if nums > 1 and nums < 37:
+        if 1 < nums < 37:
             if self.cursor == self.subcursor and self.is_numb:
                 self.signs[self.cursor]._convert_to(nums)
                 self.is_frct = False
