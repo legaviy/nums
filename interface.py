@@ -1,5 +1,7 @@
+from configparser import MAX_INTERPOLATION_DEPTH
+from exceptions import MaxLoopIterations
 from numb import _numb, _nums
-from cfg import COMMANDS_ALLOWED, BRACKETS, WrongNumeralSystem, WrongSignForNumeralSystem, NotEnoughArgumentsException
+from cfg import COMMANDS_ALLOWED, BRACKETS, MAX_LOOP_ITERATION, WrongNumeralSystem, WrongSignForNumeralSystem, NotEnoughArgumentsException
 
 class _command_execution: # выполнение команды, включающее в себя команда, два соответсвтующее ей операнда, и результат операции
     command = None
@@ -71,7 +73,11 @@ class _commander: # класс выполнения выражений и ари
         return False
 
     def _execute_polynom_by_sign(self, signs, polynom): # выполнить команды из signs для многочлена polynom
+        _iteration = 0
         while _commander._is_one_sign_in_arr(polynom, signs): # пока в многочлене есть команды из signs
+            _iteration += 1
+            if _iteration > MAX_LOOP_ITERATION:
+                raise(MaxLoopIterations)
             for i, x in enumerate(polynom):
                 if x in signs:
                     expression = _expression(polynom[i-1], polynom[i+1], x) # получить выражение с командой x и операндами по обе стороны от неё
@@ -101,8 +107,12 @@ class _commander: # класс выполнения выражений и ари
         return s
 
     def _execute_interface_expression(self, interface): # выполнить сложное выражение
-        expression = interface.signs
+        expression = list(interface.signs)
+        _iteration = 0
         while '(' in expression: # пока в оставшемся выражении остаются скобки
+            _iteration += 1
+            if _iteration > MAX_LOOP_ITERATION:
+                raise(MaxLoopIterations)
             open_bracket_index = 0 # индекс открывающей скобки в списке знаков
             close_bracket_index = 0 # индекс закрывающей скобки в списке знаков
             polynom = expression # выделяемый многочлен, обособленный скобками

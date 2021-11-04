@@ -235,7 +235,7 @@ class _numb: # число в nums'ной системе счисления
 
     def _convert_to(self, nums): # конвертировать данный экземпляр из текущей-СС в nums-СС
         self._convert_to_dec()
-        self._convert_from_dec(nums)
+        self._convert_from_dec(int(nums))
 
     def _get_float(self): # получить числовое представление данного экземлпяра
         return float(f'{self._get_pos_str()}{self._get_intg_str()}.{self._get_frct_str()}')

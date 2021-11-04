@@ -1,5 +1,8 @@
+import logging
+
 class NotEnoughArgumentsException(Exception): # исключения неверного заполнения параметров функции
     def __init__(self, msg='not enough arhuments'):
+        logging.critical(msg)
         super().__init__(msg)
 
 class WrongNumeralSystem(Exception): # исключение неверной системы счисления, где nums_req ошибочно подменено на nums
@@ -9,6 +12,7 @@ class WrongNumeralSystem(Exception): # исключение неверной с�
             if not nums == None:
                 msg = msg + f' not {str(nums)}'
             msg = msg + ')'
+        logging.critical(msg)
         super().__init__(msg)
 
 class WrongType(Exception): # исключения неверного типа аргумента, где type_req ошибочно подменено на _type
@@ -18,10 +22,17 @@ class WrongType(Exception): # исключения неверного типа �
             if not type(_type).__name__ == None:
                 msg = msg + f' not {str(type(_type).__name__)}'
             msg = msg + ')'
+        logging.critical(msg)
         super().__init__(msg)
 
 class WrongSignForNumeralSystem(Exception): # исключения неверного знака sign, не входящего в алфавит nums-ой системы
     def __init__(self, sign=None, nums=None, msg='wrong sign for alphabet'):
         if not sign == None and not nums == None:
             msg = msg + f' ({str(sign)} not member of {str(nums)}-numerical system)'
+        logging.critical(msg)
+        super().__init__(msg)
+
+class MaxLoopIterations(Exception):
+    def __init__(self, msg = 'maximum iterations for one loop (check cfg.py)'):
+        logging.critical(msg)
         super().__init__(msg)

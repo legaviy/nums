@@ -7,10 +7,9 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy_modalview import ModalView
-from kivy.config import Config
 
-from cfg import LATIN_ALPHABET
-from numb import _nums
+from cfg import LATIN_ALPHABET, logging
+from numb import _nums, _numb
 
 class KeyboardButton(Button):
     def __init__(self, text):
@@ -62,12 +61,10 @@ class ModaviewButton(Button):
             size_hint=[1, 0.8],
             font_size='15sp')
 
-class ModalviewIntTextinput(TextInput):
-    def __init__(self):
-        super().__init__(size_hint=[1, 0.75],
-            font_size='35sp', 
-            input_filter='int')
-
+class NumsTextInput(TextInput):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.input_filter='int'
         self.bind(text=self.on_text)
         self.saved_value = ''
 
@@ -80,6 +77,11 @@ class ModalviewIntTextinput(TextInput):
     def clear_saved_value(self):
         self.saved_value = ''
         self.text = ''
+
+class ModalviewIntTextinput(NumsTextInput):
+    def __init__(self):
+        super().__init__(size_hint=[1, 0.75],
+            font_size='35sp')
 
 class MainApp(App):
     KEYBOARD_KEYS = ['1', '2', '3', 'A', 'B', 'C', 'D', 'E',
@@ -101,6 +103,8 @@ class MainApp(App):
         self.backspace_btn.on_release = self.backspace
         self.convertion_mv.btn_ok.on_release = self.convert_nums
         self.changing_mv.btn_ok.on_release = self.change_nums
+
+        self.answer_nums = 10
 
         self.output()
 
@@ -126,9 +130,24 @@ class MainApp(App):
 
 
         line_al = AnchorLayout(size_hint=[0.90, 1], anchor_x='center', anchor_y='center')
-        line_ti = TextInput(font_size='60sp', disabled=True, background_color=(255, 255, 255))
-        line_al.add_widget(line_ti)
-        self.line_ti = line_ti
+        line_bl = BoxLayout(orientation='vertical',)
+        expression_bl = BoxLayout(size_hint=[1, 0.85])
+        expression_ti = TextInput(font_size='20sp', readonly=True, background_color=(3, 3, 3))
+        expression_bl.add_widget(expression_ti)
+
+        answer_bl = BoxLayout(orientation='horizontal', size_hint=[1, 0.15])
+        answer_ti = TextInput(font_size='28sp', readonly=True, background_color=(3, 3, 3), size_hint=[0.8,1])
+        answer_nums_ti = NumsTextInput(font_size='30sp', background_color=(1,1,1), size_hint=[0.2,1], text='10')
+        answer_bl.add_widget(answer_ti)
+        answer_bl.add_widget(answer_nums_ti)
+        answer_nums_ti.bind(text=self.on_answer_nums)
+
+        line_bl.add_widget(expression_bl)
+        line_bl.add_widget(answer_bl)
+        line_al.add_widget(line_bl)
+        self.expression_ti = expression_ti
+        self.answer_ti = answer_ti
+
 
         commands_executions_menu_al = AnchorLayout(size_hint=[0.05, 1], anchor_x='right', anchor_y='center')
         commands_executions_menu_btn = Button(text='...')
@@ -141,7 +160,7 @@ class MainApp(App):
         middle_hb.add_widget(commands_executions_menu_al)
 
 
-        functional_tab_hb = BoxLayout(orientation='horizontal', size_hint=[1, 0.05])
+        functional_tab_hb = BoxLayout(orientation='horizontal', size_hint=[1, 0.1])
 
         cursor_offset_left_btn = FunctionalButton('<-')
         convert_btn = FunctionalButton('conv')
@@ -163,15 +182,15 @@ class MainApp(App):
         self.backspace_btn = backspace_btn
         self.cursor_offset_right_btn = cursor_offset_right_btn
 
-        keyboard_al = AnchorLayout(size_hint=[1, 0.45])
+        keyboard_al = AnchorLayout(size_hint=[1, 0.4])
         keyboard_gl = GridLayout(cols=8, spacing=1)
         keyboard_al.add_widget(keyboard_gl)
 
         main_layout = BoxLayout(orientation='vertical')
         main_layout.add_widget(settings_menu_al)
         main_layout.add_widget(middle_hb)
-        main_layout.add_widget(functional_tab_hb)
         main_layout.add_widget(keyboard_al)
+        main_layout.add_widget(functional_tab_hb)
 
 
         self.keyboard_gl = keyboard_gl
@@ -225,9 +244,15 @@ class MainApp(App):
             self.convertion_mv.dismiss_mv()
             self.output()
 
+    def on_answer_nums(self, instance, value):
+        if not value == '':
+            value = int(value)
+            if 1 < value < 37:
+                self.answer_nums = value
+                self.output()
+
     def output(self):
-        text = ''
-        self.line_ti.text = ''
+        self.expression_ti.text = ''
         CURSOR_SIGN = '.' # обозначение курсора в строке
         cursor = self._interface_.cursor
         subcursor = self._interface_.subcursor
@@ -235,6 +260,11 @@ class MainApp(App):
         signs = self._interface_.signs
         is_numb = self._interface_.is_numb
         is_frct = self._interface_.is_frct
+        answer_nums = self.answer_nums
+        answer_text = '...'
+
+        # заполнение выражения
+        text = ''
         for i, sign in enumerate(signs):
             sign = '^' if sign == '**' else sign
             if subcursor > cursor and subcursor == i:
@@ -272,8 +302,21 @@ class MainApp(App):
             if subcursor > cursor and cursor == i:
                 text = f'{text} {CURSOR_SIGN} '
 
-        self.line_ti.text = text
-        return text
+        self.expression_ti.text = text
+
+        # заполнение ответа
+        try:
+            answer = _numb(0)
+            answer._apply_numb_properties_to_self(self._commander_._execute_interface_expression(self._interface_))
+            answer._convert_to(answer_nums)
+            answer_text = str(answer)
+        except Exception as exc:
+            logging.critical('MainApp.output cought exception:')
+            logging.critical(exc)
+
+        self.answer_ti.text = str(answer_text)
+
+        return text, answer_text
 
 if __name__ == '__main__':
     MainApp().run()
