@@ -240,6 +240,9 @@ class _numb: # число в nums'ной системе счисления
     def _get_float(self): # получить числовое представление данного экземлпяра
         return float(f'{self._get_pos_str()}{self._get_intg_str()}.{self._get_frct_str()}')
 
+    def _change_pos(self, pos=None): # сменить знак числа на противоположный
+        self.pos = pos if not pos == None else not self.pos
+
     def info(self): # служебная функция для вывода свойств данного экземпляра
         print('self.pos', self.pos, f'({"+" if self.pos else "-"})')
         print('self.intg', self.intg)

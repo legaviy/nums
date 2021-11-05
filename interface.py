@@ -228,11 +228,13 @@ class _interface: # класс ввода выражения
                     self.subcursor += 1 # сместить курсор в следующий промежуток между знаками
                 elif self.cursor < self.subcursor: # если курсор находится между знаками
                     self.cursor += 1 # сместить курсор на следующий знак
-            elif self.subcursor > 0 and not is_to_right: # если курсор находится не в конце начале (при смещении влево)
+            elif self.subcursor > 0 and not is_to_right: # если курсор находится не в начале (при смещении влево)
                 if self.cursor == self.subcursor: # если курсор находится на конкретном знаке
                     self.cursor -= 1 # сместить курсор в предудущий промежуток между знаками
                 elif self.cursor < self.subcursor: # если курсор находится между знаками
                     self.subcursor -= 1 # сместить курсор на предудущий знак
+            elif self.subcursor == self.cursor == 0 and not is_to_right: # если курсор стоит на первом знаке (не число) и при смещении влево
+                self.cursor -= 1 # сместить курсор в самое начало
             if self.cursor == self.subcursor and type(self.signs[self.subcursor]).__name__ == '_numb': # если курсор после смещения перешёл на число
                 self.is_numb = True
                 if is_to_right: # если смещение производилось направо, то
@@ -246,6 +248,20 @@ class _interface: # класс ввода выражения
 
     def _offset_left(self):
         self._offset(False)
+
+    def _offset_to_begin(self):
+        self.cursor = -1
+        self.subcursor = 0
+        self.numbcursor = 0
+        self.is_numb = False
+        self.is_frct = False
+
+    def _offset_to_end(self):
+        self.cursor = len(self.signs) - 1
+        self.subcursor = len(self.signs)
+        self.numbcursor = 0
+        self.is_numb = False
+        self.is_frct = False
 
     def _input(self, val): # добавить знак/цифру
         val = str(val).upper()
