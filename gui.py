@@ -182,7 +182,7 @@ class MainApp(App):
         expression_bl.add_widget(expression_ti)
 
         answer_bl = BoxLayout(orientation='horizontal', size_hint=STYLES['answer_bl']['sh'])
-        answer_ti = TextInput(font_size=STYLES['answer_ti']['fz'], background_color=STYLES['answer_ti']['bgc'], size_hint=STYLES['answer_ti']['sh'], readonly=True)
+        answer_ti = MarkupTextInput(font_size=STYLES['answer_ti']['fz'], background_color=STYLES['answer_ti']['bgc'], size_hint=STYLES['answer_ti']['sh'], readonly=True)
         answer_nums_ti = NumsTextInput(font_size=STYLES['answer_nums_ti']['fz'], background_color=STYLES['answer_nums_ti']['bgc'], size_hint=STYLES['answer_nums_ti']['sh'], text='10')
         answer_bl.add_widget(answer_ti)
         answer_bl.add_widget(answer_nums_ti)
@@ -407,7 +407,7 @@ class MainApp(App):
                             text = f'{text}{CS}'
                         text = f'{text}{"0" if sign._get_frct_str() == "" else "," + sign._get_frct_str()}'
                         
-                    text = f'{text}({str(sign.nums)}) '
+                    text = f'{text}{sign._get_nums_subscriber()} '
                 else:
                     text = f'{text} {sign}{CS} '
             else:

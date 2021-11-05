@@ -218,8 +218,11 @@ class _numb: # число в nums'ной системе счисления
     def _get_pos_str(self):
         return '' if self.pos else '-'
 
+    def _get_nums_subscriber(self):
+        return f'[size=10]{self.nums}[/size]'
+
     def __str__(self): # строковое представление числа
-        return f'{self._get_pos_str()}{self._get_intg_str()},{self._get_frct_str()}({self.nums})'
+        return f'{self._get_pos_str()}{self._get_intg_str()},{self._get_frct_str()}{self._get_nums_subscriber()}'
 
     def _apply_numb_properties_to_self(self, numb): # применить к данному экземпляру свойства экземпляра numb
         self.pos = numb.pos

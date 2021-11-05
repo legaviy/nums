@@ -1,7 +1,5 @@
-from configparser import MAX_INTERPOLATION_DEPTH
-from exceptions import MaxLoopIterations
 from numb import _numb, _nums
-from cfg import COMMANDS_ALLOWED, BRACKETS, MAX_LOOP_ITERATION, WrongNumeralSystem, WrongSignForNumeralSystem, NotEnoughArgumentsException
+from cfg import COMMANDS_ALLOWED, BRACKETS, MAX_LOOP_ITERATION, WrongNumeralSystem, WrongSignForNumeralSystem, NotEnoughArgumentsException, MaxLoopIterations
 
 class _command_execution: # выполнение команды, включающее в себя команда, два соответсвтующее ей операнда, и результат операции
     command = None
