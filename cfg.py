@@ -1,9 +1,12 @@
 """
-обозначения в комментариях:
+обозначения в комментариях и условные обозначения перменных/ключей:
     - X-СС: система счисления с основанием X;
     - промежуток (в _interface.signs): положение курсора между знаками
     - ГПИ: графический пользовательский интерфейс;
     - команда: программное строковое представление арифметического действия;
+    - bgc: background_color;
+    - fz: font_size;
+    - sh: size_hint;
 """
 
 from exceptions import *
@@ -29,11 +32,12 @@ KEYBOARD_KEYS = ['1', '2', '3', 'A', 'B', 'C', 'D', 'E',
                  '7', '8', '9', 'K', 'L', 'M', 'N', 'O',
                  '(', '0', ')', 'P', 'Q', 'R', 'S', 'T',
                  '+', '-', '×', 'U', 'V', 'W', 'X', 'Y',
-                 '/', '^', '±', 'Z', ' ', ' ', ' ', ' ',] # надписи кнопок основной клавиатуры
+                 '/', '^', '±', 'Z', '=', ' ', ' ', ' ',] # надписи кнопок основной клавиатуры
 
 KEYS_IS_DEFAULT_EXCEPTIONS = {
     '±': 'changing_pos',
-} # словарь надписей нестандартных кнопок и соответствующие им названия их действий;
+    '=': 'applying_answer',
+} # словарь надписей нестандартных кнопок и соответствующие им названия их действий (см. gui.py:MyApp:on_keyboard_btn_pressed); 
   # <<key:str>, <action:str>>
   # key: надпись кнопки; action: название действия, которой соответствует кнопка с надписью key
 
@@ -44,11 +48,133 @@ KEYS_ANALOGUES = {
   # <<command:str>, <gui_analogue>>
   # command: программное представление команды; gui_analogue: представление команды в ГПИ
 
+STYLES = {
+    'keyboard_btn':
+        {
+            'fz': '20sp',
+            'bgc': (3, 3, 3),
+            'color': (0.05, 0.05, 0.05)
+        },
 
-def _get_command_analogue(value, is_gui_analogue=True): # is_gui_analogue = <bool>: True при получение ГПИ-представление команды; False при получение программного представления
-    return KEYS_ANALOGUES[value] if is_gui_analogue else list(KEYS_ANALOGUES.keys())[[val for val in list(KEYS_ANALOGUES.values())].index(value)]
+    'functional_btn':
+        {
+            'fz': '15sp',
+            'bgc': (2.4, 2.4, 2.4),
+            'color': (0.05, 0.05, 0.05)
+        },
 
-def get_command_analogue(value, is_gui_analogue=True):
+    'nums_btn':
+        {
+            'fz': '15sp',
+            'bgc': (2.4, 2.4, 2.4),
+            'color': (0.05, 0.05, 0.05)
+        },
+
+    'nums_mv':
+        {
+            'sh': [0.75, 0.25],
+            'main_bl': {
+                'padding': 20,
+                'spacing': 5
+            },
+            'buttons_hb': { 'spacing': 15 },
+            'nums_hb': {
+                'spacing': 15,
+                'padding': 5
+            },
+        },
+
+    'modalview_btn':
+        {
+            'bgc': (1.4, 1.4, 1.4),
+            'color': (0.05, 0.05, 0.05),
+            'sh': [1, 0.8],
+            'fz': '15sp',
+        },
+    
+    'modalview_int_textinput':
+        {
+            'sh': [1, 0.75],
+            'fz': '35sp'
+        },
+
+    'settings_menu_al':
+        {
+            'sh': [1, 0.05]
+        },
+
+    'convertions_menu_al':
+        {
+            'sh': [0.05, 1]
+        },
+
+    'line_al':
+        {
+            'sh': [0.90, 1]
+        },
+
+    'expression_bl':
+        {
+            'sh': [1, 0.85]
+        },
+
+    'expression_ti':
+        {
+            'fz': '20sp',
+            'bgc': (3, 3, 3)
+        },
+
+    'answer_bl':
+        {
+            'sh': [1, 0.15]
+        },
+
+    'answer_ti':
+        {
+            'bgc': (3, 3, 3),
+            'sh': [0.8, 1],
+            'fz': '15sp',
+        },
+    
+    'answer_nums_ti':
+        {
+            'bgc': (1, 1, 1),
+            'sh': [0.2, 1],
+            'fz': '30sp',
+        },
+
+    'commands_executions_menu_al':
+        { 'sh': [0.05, 1] },
+
+    'middle_hb':
+        { 'sh': [1, 0.45] },
+        
+    'functional_tab_hb':
+        { 'sh': [1, 0.1] },
+        
+    'cursor_offset_left_btn':
+        { 'sh': [0.2, 1] },
+        
+    'cursor_offset_right_btn':
+        { 'sh': [0.2, 1] },
+        
+    'functional_tab_middle_hb':
+        { 'sh': [0.6, 1] },
+        
+    'functional_tab_middle_upper_hb':
+        { 'sh': [1, 0.75] },
+        
+    'functional_tab_middle_lower_hb':
+        { 'sh': [1, 0.25] },
+        
+    'keyboard_al':
+        { 'sh': [1, 0.4] },
+        
+    'keyboard_gl':
+        { 'spacing': 1 },
+} # словарь стилей элементов ГПИ
+
+def get_command_analogue(value, is_gui_analogue=True): # is_gui_analogue = <bool>: True при получение ГПИ-представление команды; False при получение программного представления
     if is_gui_analogue:
         return KEYS_ANALOGUES[value] if value in KEYS_ANALOGUES else value
     if value in list(KEYS_ANALOGUES.values()):

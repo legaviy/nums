@@ -9,7 +9,7 @@ from kivy.uix.label import Label
 from kivy_markuptextinput import MarkupTextInput
 from kivy_modalview import ModalView
 
-from cfg import LATIN_ALPHABET, logging, CURSOR_SIGN_FORMATTED, KEYBOARD_KEYS, KEYS_IS_DEFAULT_EXCEPTIONS, get_command_analogue
+from cfg import LATIN_ALPHABET, logging, CURSOR_SIGN_FORMATTED, KEYBOARD_KEYS, KEYS_IS_DEFAULT_EXCEPTIONS, get_command_analogue, STYLES
 from numb import _nums, _numb
 
 class KeyboardButton(Button):
@@ -20,42 +20,67 @@ class KeyboardButton(Button):
     """
     def __init__(self, text, is_default=True, action=None):
         super().__init__(text=str(text),
-            background_color=(3, 3, 3),
-            color=(0.05, 0.05, 0.05),
-            font_size='20sp')
+            background_color=STYLES['keyboard_btn']['bgc'],
+            color=STYLES['keyboard_btn']['color'],
+            font_size=STYLES['keyboard_btn']['fz'])
         self.is_default = is_default
         self.action = action
 
 class FunctionalButton(Button):
         def __init__(self, text):
             super().__init__(text=str(text),
-                background_color=(2.4, 2.4, 2.4),
-                color=(0.05, 0.05, 0.05),
-                font_size='15sp')
+                background_color=STYLES['functional_btn']['bgc'],
+                color=STYLES['functional_btn']['color'],
+                font_size=STYLES['functional_btn']['fz'])
 
-class ModalviewIntInput(ModalView):
+class NumsButton(Button):
+    def __init__(self, nums=10):
+        super().__init__(text=str(str(nums)),
+                background_color=STYLES['nums_btn']['bgc'],
+                color=STYLES['nums_btn']['color'],
+                font_size=STYLES['nums_btn']['fz'])
+        self.nums = int(nums)
+
+class NumsModalview(ModalView):
     def __init__(self):
-        super().__init__(auto_dismiss=True, size_hint=[0.75, 0.25])
-        vb = BoxLayout(orientation='vertical', padding=20)
+        super().__init__(auto_dismiss=True, size_hint=STYLES['nums_mv']['sh'])
+        main_bl = BoxLayout(orientation='vertical', padding=STYLES['nums_mv']['main_bl']['padding'], spacing=STYLES['nums_mv']['main_bl']['spacing'])
         ti = ModalviewIntTextinput() # поле ввода СС
 
         # слой с кнопками принятия и отмены
-        buttons_hb = BoxLayout(orientation='horizontal', spacing=15)
+        buttons_hb = BoxLayout(orientation='horizontal', spacing=STYLES['nums_mv']['buttons_hb']['spacing'])
         btn_ok = ModaviewButton(text='ok')
         btn_cancel = ModaviewButton(text='cancel')
         buttons_hb.add_widget(btn_ok)
         buttons_hb.add_widget(btn_cancel)
         btn_cancel.on_release = self.dismiss_mv
 
-        vb.add_widget(ti)
-        vb.add_widget(buttons_hb)
+        nums_hb = BoxLayout(orientation='horizontal', padding=STYLES['nums_mv']['nums_hb']['padding'], spacing=STYLES['nums_mv']['nums_hb']['spacing'])
+        nums_2_btn = NumsButton(nums='2')
+        nums_8_btn = NumsButton(nums='8')
+        nums_10_btn = NumsButton(nums='10')
+        nums_16_btn = NumsButton(nums='16')
+        nums_hb.add_widget(nums_2_btn)
+        nums_hb.add_widget(nums_8_btn)
+        nums_hb.add_widget(nums_10_btn)
+        nums_hb.add_widget(nums_16_btn)
 
-        self.vb = vb
+        main_bl.add_widget(ti)
+        main_bl.add_widget(buttons_hb)
+        main_bl.add_widget(nums_hb)
+
+        self.main_bl = main_bl
         self.ti = ti
         self.buttons_hb = buttons_hb
         self.btn_ok = btn_ok
         self.btn_cancel = btn_cancel
-        self.add_widget(vb)
+
+        self.nums_2_btn = nums_2_btn
+        self.nums_8_btn = nums_8_btn
+        self.nums_10_btn = nums_10_btn
+        self.nums_16_btn = nums_16_btn
+
+        self.add_widget(main_bl)
 
     def dismiss_mv(self):
         self.ti.clear_saved_value()
@@ -64,10 +89,10 @@ class ModalviewIntInput(ModalView):
 class ModaviewButton(Button):
     def __init__(self, text):
         super().__init__(text=str(text),
-            background_color=(1.4, 1.4, 1.4),
-            color=(0.05, 0.05, 0.05),
-            size_hint=[1, 0.8],
-            font_size='15sp')
+            background_color=STYLES['modalview_btn']['bgc'],
+            color=STYLES['modalview_btn']['color'],
+            font_size=STYLES['modalview_btn']['fz'],
+            size_hint=STYLES['modalview_btn']['sh'])
 
 class NumsTextInput(TextInput):
     def __init__(self, **kwargs):
@@ -89,10 +114,14 @@ class NumsTextInput(TextInput):
 
 class ModalviewIntTextinput(NumsTextInput):
     def __init__(self):
-        super().__init__(size_hint=[1, 0.75],
-            font_size='35sp')
+        super().__init__(
+            font_size=STYLES['modalview_int_textinput']['fz'],
+            size_hint=STYLES['modalview_int_textinput']['sh'])
 
 class MainApp(App):
+    answer = None
+    answer_nums = 10
+
     def build(self):
         self.build_interface()
 
@@ -109,41 +138,52 @@ class MainApp(App):
         self.cursor_offset_to_begin_btn.on_release = self.offset_to_begin
         self.clear_signs_btn.on_release = self.clear_signs
         self.cursor_offset_ot_end_btn.on_release = self.offset_to_end
+        
+        self.convertion_mv.nums_2_btn.bind(on_release=self.on_converion_nums_btn_pressed)
+        self.convertion_mv.nums_8_btn.bind(on_release=self.on_converion_nums_btn_pressed)
+        self.convertion_mv.nums_10_btn.bind(on_release=self.on_converion_nums_btn_pressed)
+        self.convertion_mv.nums_16_btn.bind(on_release=self.on_converion_nums_btn_pressed)
+
+        self.changing_mv.nums_2_btn.bind(on_release=self.on_changing_nums_btn_pressed)
+        self.changing_mv.nums_8_btn.bind(on_release=self.on_changing_nums_btn_pressed)
+        self.changing_mv.nums_10_btn.bind(on_release=self.on_changing_nums_btn_pressed)
+        self.changing_mv.nums_16_btn.bind(on_release=self.on_changing_nums_btn_pressed)
 
         self.answer_nums = 10
+        self.answer = _numb(0)
 
         self.output()
 
         return self.main_layout
 
     def build_interface(self):
-        self.convertion_mv = ModalviewIntInput()
+        self.convertion_mv = NumsModalview()
         self.convertion_mv_ti = self.convertion_mv.ti
         self.convertion_mv_btn_ok = self.convertion_mv.btn_ok
 
-        self.changing_mv = ModalviewIntInput()
+        self.changing_mv = NumsModalview()
         self.changing_mv_ti = self.changing_mv.ti
         self.changing_mv_btn_ok = self.changing_mv.btn_ok
 
-        settings_menu_al = AnchorLayout(size_hint=[1, 0.05])
+        settings_menu_al = AnchorLayout(size_hint=STYLES['settings_menu_al']['sh'])
         settings_menu_btn = Button(text='...')
         settings_menu_al.add_widget(settings_menu_btn)
 
 
-        convertions_menu_al = AnchorLayout(size_hint=[0.05, 1], anchor_x='left', anchor_y='center')
+        convertions_menu_al = AnchorLayout(size_hint=STYLES['convertions_menu_al']['sh'], anchor_x='left', anchor_y='center')
         convertions_menu_btn = Button(text='...')
         convertions_menu_al.add_widget(convertions_menu_btn)
 
 
-        line_al = AnchorLayout(size_hint=[0.90, 1], anchor_x='center', anchor_y='center')
-        line_bl = BoxLayout(orientation='vertical',)
-        expression_bl = BoxLayout(size_hint=[1, 0.85])
-        expression_ti = MarkupTextInput(font_size='20sp', readonly=True, background_color=(3, 3, 3))
+        line_al = AnchorLayout(size_hint=STYLES['line_al']['sh'], anchor_x='center', anchor_y='center')
+        line_bl = BoxLayout(orientation='vertical')
+        expression_bl = BoxLayout(size_hint=STYLES['expression_bl']['sh'])
+        expression_ti = MarkupTextInput(font_size=STYLES['expression_ti']['fz'], background_color=STYLES['expression_ti']['bgc'], readonly=True)
         expression_bl.add_widget(expression_ti)
 
-        answer_bl = BoxLayout(orientation='horizontal', size_hint=[1, 0.15])
-        answer_ti = TextInput(font_size='10sp', readonly=True, background_color=(3, 3, 3), size_hint=[0.8,1])
-        answer_nums_ti = NumsTextInput(font_size='30sp', background_color=(1,1,1), size_hint=[0.2,1], text='10')
+        answer_bl = BoxLayout(orientation='horizontal', size_hint=STYLES['answer_bl']['sh'])
+        answer_ti = TextInput(font_size=STYLES['answer_ti']['fz'], background_color=STYLES['answer_ti']['bgc'], size_hint=STYLES['answer_ti']['sh'], readonly=True)
+        answer_nums_ti = NumsTextInput(font_size=STYLES['answer_nums_ti']['fz'], background_color=STYLES['answer_nums_ti']['bgc'], size_hint=STYLES['answer_nums_ti']['sh'], text='10')
         answer_bl.add_widget(answer_ti)
         answer_bl.add_widget(answer_nums_ti)
         answer_nums_ti.bind(text=self.on_answer_nums)
@@ -155,43 +195,43 @@ class MainApp(App):
         self.answer_ti = answer_ti
 
 
-        commands_executions_menu_al = AnchorLayout(size_hint=[0.05, 1], anchor_x='right', anchor_y='center')
+        commands_executions_menu_al = AnchorLayout(size_hint=STYLES['commands_executions_menu_al']['sh'], anchor_x='right', anchor_y='center')
         commands_executions_menu_btn = Button(text='...')
         commands_executions_menu_al.add_widget(commands_executions_menu_btn)
 
 
-        middle_hb = BoxLayout(orientation='horizontal', size_hint=[1, 0.45])
+        middle_hb = BoxLayout(orientation='horizontal', size_hint=STYLES['middle_hb']['sh'])
         middle_hb.add_widget(convertions_menu_al)
         middle_hb.add_widget(line_al)
         middle_hb.add_widget(commands_executions_menu_al)
 
 
-        functional_tab_hb = BoxLayout(orientation='horizontal', size_hint=[1, 0.1])
+        functional_tab_hb = BoxLayout(orientation='horizontal', size_hint=STYLES['functional_tab_hb']['sh'])
 
         cursor_offset_left_btn = FunctionalButton('<-')
-        cursor_offset_left_btn.size_hint = [0.2, 1]
+        cursor_offset_left_btn.size_hint = STYLES['cursor_offset_left_btn']['sh']
         convert_btn = FunctionalButton('conv')
         convert_btn.on_release = self.convertion_mv.open
         change_btn = FunctionalButton('change')
         change_btn.on_release = self.changing_mv.open
         backspace_btn = FunctionalButton('backspace')
         cursor_offset_right_btn = FunctionalButton('->')
-        cursor_offset_right_btn.size_hint = [0.2, 1]
+        cursor_offset_right_btn.size_hint = STYLES['cursor_offset_right_btn']['sh']
         cursor_offset_to_begin_btn = FunctionalButton('home')
         cursor_offset_ot_end_btn = FunctionalButton('end')
         clear_signs_btn = FunctionalButton('clear')
 
         functional_tab_hb.add_widget(cursor_offset_left_btn)
 
-        functional_tab_middle_hb = BoxLayout(orientation='vertical', size_hint=[0.6, 1])
+        functional_tab_middle_hb = BoxLayout(orientation='vertical', size_hint=STYLES['functional_tab_middle_hb']['sh'])
 
-        functional_tab_middle_upper_hb = BoxLayout(orientation='horizontal', size_hint=[1, 0.75])
+        functional_tab_middle_upper_hb = BoxLayout(orientation='horizontal', size_hint=STYLES['functional_tab_middle_upper_hb']['sh'])
         functional_tab_middle_upper_hb.add_widget(convert_btn)
         functional_tab_middle_upper_hb.add_widget(change_btn)
         functional_tab_middle_upper_hb.add_widget(backspace_btn)
         functional_tab_middle_hb.add_widget(functional_tab_middle_upper_hb)
 
-        functional_tab_middle_lower_hb = BoxLayout(orientation='horizontal', size_hint=[1, 0.25])
+        functional_tab_middle_lower_hb = BoxLayout(orientation='horizontal', size_hint=STYLES['functional_tab_middle_lower_hb']['sh'])
         functional_tab_middle_lower_hb.add_widget(cursor_offset_to_begin_btn)
         functional_tab_middle_lower_hb.add_widget(clear_signs_btn)
         functional_tab_middle_lower_hb.add_widget(cursor_offset_ot_end_btn)
@@ -209,8 +249,8 @@ class MainApp(App):
         self.clear_signs_btn = clear_signs_btn
         self.cursor_offset_ot_end_btn = cursor_offset_ot_end_btn
 
-        keyboard_al = AnchorLayout(size_hint=[1, 0.4])
-        keyboard_gl = GridLayout(cols=8, spacing=1)
+        keyboard_al = AnchorLayout(size_hint=STYLES['keyboard_al']['sh'])
+        keyboard_gl = GridLayout(cols=8, spacing=STYLES['keyboard_gl']['spacing'])
         keyboard_al.add_widget(keyboard_gl)
 
         main_layout = BoxLayout(orientation='vertical')
@@ -249,6 +289,8 @@ class MainApp(App):
             self.output()
         elif instance.action == 'changing_pos': # обработчики нестандартных кнопок
             self.change_positive_of_numb()
+        elif instance.action == 'applying_answer':
+            self.apply_answer()
 
     def offset_left(self):
         self._interface_._offset(False)
@@ -301,12 +343,26 @@ class MainApp(App):
             self._interface_.signs[self._interface_.cursor]._change_pos()
             self.output()
 
+    def apply_answer(self):
+        if not self.answer == None:
+            self._interface_._clear()
+            self._interface_.signs = [self.answer]
+            self.output()
+
     def on_answer_nums(self, instance, value):
         if not value == '':
             value = int(value)
             if 1 < value < 37:
                 self.answer_nums = value
                 self.output()
+
+    def on_converion_nums_btn_pressed(self, instance):
+        self.convertion_mv_ti.text = str(instance.nums)
+        self.convert_nums()
+
+    def on_changing_nums_btn_pressed(self, instance):
+        self.changing_mv_ti.text = str(instance.nums)
+        self.change_nums()
 
     def output(self):
         self.expression_ti.text = ''
@@ -366,11 +422,13 @@ class MainApp(App):
         try:
             answer = _numb(0)
             answer._apply_numb_properties_to_self(self._commander_._execute_interface_expression(self._interface_))
+            self.answer = answer
             answer._convert_to(answer_nums)
             answer_text = str(answer)
         except Exception as exc:
             logging.critical('MainApp.output cought exception:')
             logging.critical(exc)
+            self.answer = None
 
         self.answer_ti.text = str(answer_text)
 
