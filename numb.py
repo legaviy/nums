@@ -219,7 +219,7 @@ class _numb: # число в nums'ной системе счисления
         return '' if self.pos else '-'
 
     def _get_nums_subscriber(self):
-        return f'[size=10]{self.nums}[/size]'
+        return f'[size=20]{self.nums}[/size]'
 
     def __str__(self): # строковое представление числа
         return f'{self._get_pos_str()}{self._get_intg_str()},{self._get_frct_str()}{self._get_nums_subscriber()}'

@@ -2,14 +2,13 @@ from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy_markuptextinput import MarkupTextInput
 from kivy_modalview import ModalView
 
-from cfg import LATIN_ALPHABET, logging, CURSOR_SIGN_FORMATTED, KEYBOARD_KEYS, KEYS_IS_DEFAULT_EXCEPTIONS, get_command_analogue, STYLES
+from cfg import CURSOR_SIGN_FORMATTED, LATIN_ALPHABET, logging, CURSOR_SIGN_FORMATTED, KEYBOARD_KEYS, KEYS_IS_DEFAULT_EXCEPTIONS, get_command_analogue, STYLES
 from numb import _nums, _numb
 
 class KeyboardButton(Button):
@@ -149,6 +148,8 @@ class MainApp(App):
         self.changing_mv.nums_10_btn.bind(on_release=self.on_changing_nums_btn_pressed)
         self.changing_mv.nums_16_btn.bind(on_release=self.on_changing_nums_btn_pressed)
 
+        self.expression_ti.bind(size=self.expression_ti.setter('text_size'))
+
         self.answer_nums = 10
         self.answer = _numb(0)
 
@@ -178,7 +179,7 @@ class MainApp(App):
         line_al = AnchorLayout(size_hint=STYLES['line_al']['sh'], anchor_x='center', anchor_y='center')
         line_bl = BoxLayout(orientation='vertical')
         expression_bl = BoxLayout(size_hint=STYLES['expression_bl']['sh'])
-        expression_ti = MarkupTextInput(font_size=STYLES['expression_ti']['fz'], background_color=STYLES['expression_ti']['bgc'], readonly=True)
+        expression_ti = Label(font_size=STYLES['expression_ti']['fz'], halign="left", valign="top", markup=True)
         expression_bl.add_widget(expression_ti)
 
         answer_bl = BoxLayout(orientation='horizontal', size_hint=STYLES['answer_bl']['sh'])
@@ -262,6 +263,7 @@ class MainApp(App):
 
         self.keyboard_gl = keyboard_gl
         self.fill_keyboard()
+
 
         self.main_layout = main_layout
 
@@ -347,6 +349,7 @@ class MainApp(App):
         if not self.answer == None:
             self._interface_._clear()
             self._interface_.signs = [self.answer]
+            self.offset_to_end()
             self.output()
 
     def on_answer_nums(self, instance, value):
