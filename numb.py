@@ -97,8 +97,8 @@ class _nums: # класс статических методов для пере�
             raise(NotEnoughArgumentsException)
         arr = []  # список переведённых чисел в систему с основанием num
         mul = float('0.' + ''.join([elt for elt in str(frct)])) # число типа float через объединения строк: '0.' и объеденённый в строку список дробной части
-        n = 0 # счётчик, не позволяющий добавить в дробную часть больше знаков, чем SIGNS_COMMA_LIMIT
-        while n <= SIGNS_COMMA_LIMIT: 
+        n = 0 # счётчик, не позволяющий добавить в дробную часть больше знаков, чем SIGNS_COMMA_LIMIT (см. cfg.py)
+        while n <= SIGNS_COMMA_LIMIT and mul > 0: 
             mul *= nums # умножение дробной части на основание системы
             arr.append(int(mul)) # добавить целую часть от умножения в список
             mul = float('0.' + ''.join([str(elt) for elt in _nums._get_frct(mul)]))
@@ -146,10 +146,10 @@ class _nums: # класс статических методов для пере�
             raise NotEnoughArgumentsException()
         intgs = ''.join([char for char in intgs])
         intgs = intgs if is_fract else intgs[::-1]
-        num = 0 # переведённое значение в систему с основанием nums
+        num = 0 # переведённое значение в nums-СС
         grade = 1 if is_fract else 0 # степень возведения для каждого знака
         for char in intgs:
-            num += int(_nums._inter_sign_to_num(char)) * nums ** (mode * grade)
+            num = (num + float(f'{int(_nums._inter_sign_to_num(char)) * nums ** (mode * grade):g}')) if is_fract else num + int(_nums._inter_sign_to_num(char)) * nums ** (mode * grade)
             grade += 1
         if 'e' in str(num) and is_fract:
             num = _nums._get_frct(num)
@@ -219,7 +219,7 @@ class _numb: # число в nums'ной системе счисления
         return '' if self.pos else '-'
 
     def _get_nums_subscriber(self):
-        return f'[size=20]{self.nums}[/size]'
+        return f'[size=10]{self.nums}[/size]'
 
     def __str__(self): # строковое представление числа
         return f'{self._get_pos_str()}{self._get_intg_str()},{self._get_frct_str()}{self._get_nums_subscriber()}'
