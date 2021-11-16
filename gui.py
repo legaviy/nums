@@ -1,117 +1,9 @@
 from kivy.app import App
-from kivy.uix.button import Button
-from kivy.uix.anchorlayout import AnchorLayout
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
-from kivy_elements import KeyboardButton, FunctionalButton, NumsModalview, NumsTextInput
-
-from cfg import CURSOR_SIGN_FORMATTED, LATIN_ALPHABET, logging, CURSOR_SIGN_FORMATTED, KEYBOARD_KEYS, KEYS_IS_DEFAULT_EXCEPTIONS, get_command_analogue, STYLES, NotEnoughArgumentsException, SIGNS_COMMA_LIMIT
+from kivy_elements import (CommandExecutionModalView, ConvertionModalview, KeyboardButton, FunctionalButton, NumsModalview, NumsTextInput,
+                            AnchorLayout, Label, GridLayout, Button, BoxLayout)
+from cfg import CURSOR_SIGN_FORMATTED, LATIN_ALPHABET, logging, CURSOR_SIGN_FORMATTED, KEYBOARD_KEYS, KEYS_IS_DEFAULT_EXCEPTIONS, get_command_analogue, STYLES
+from interface import ConvertionTable
 from numb import _nums, _numb
-
-class ConvertionTable:
-    mode = None
-    result = None
-    table = []
-    table_frct = []
-
-    def __init__(self, from_nums, to_nums, numb):
-        from_nums = int(from_nums)
-        to_nums = int(to_nums)
-        self.from_nums = from_nums
-        self.to_nums = to_nums
-        self.numb = numb
-        self.mode = 'from_dec' if from_nums == 10 else ('to_dec' if to_nums == 10 else None)
-        if self.mode == None:
-            raise(NotEnoughArgumentsException)
-
-        if self.mode == 'to_dec':
-            self.table = self.to_dec(self.from_nums, self.numb, is_fract=False)
-            self.table_frct = self.to_dec(self.from_nums, self.numb, is_fract=True)
-            self.result = _nums._convert_to_dec(self.numb, self.from_nums)
-        else:
-            self.table = self.from_dec(self.to_nums, self.numb)
-            self.table_frct = self.from_dec_fract(self.to_nums, self.numb)
-            self.result = _nums._convert_from_dec(self.numb, self.to_nums)
-
-    def from_dec(self, nums, numb=None, intg=None) -> list():
-        dig = None
-        if intg == None and not numb == None:
-            dig = int(''.join([str(elt) for elt in numb.intg]))
-        elif numb == None and not intg == None:
-            dig = intg
-        else:
-            raise(NotEnoughArgumentsException)
-        table = []
-        arr = [] # список переведённых чисел в систему с основанием num
-        mod = dig % nums # остаток деления
-        div = dig // nums # целое от частного
-        table.append([dig, nums, div, mod])
-        arr.append(mod)
-        while div > 0: # пока частное (предыдущее частное, поделённое на основание системы счисления) остаётся больше нуля, добавлять остаток от деления
-            mod = div % nums # остаток от деления
-            table.append([div, nums])
-            div //= nums # целая часть от деления
-            table[-1] = table[-1] + [div, mod]
-            arr.append(mod)
-            if div < nums: # если частное меньше основания системы, то оно сразу добавляется в список, и цикл преывается
-                table.append([div, nums, div, div])
-                arr.append(div)
-                break
-        print(table)
-        return table
-
-    def from_dec_fract(self, nums, numb=None, frcts=None) -> list():
-        frct = None
-        if frcts == None and not numb == None:
-            frct = (''.join([str(elt) for elt in numb.frct]))
-        elif numb == None and not frcts == None:
-            frct = frcts
-        else:
-            raise(NotEnoughArgumentsException)
-        table = []
-        arr = []  # список переведённых чисел в систему с основанием num
-        mul = float('0.' + ''.join([elt for elt in str(frct)])) # число типа float через объединения строк: '0.' и объеденённый в строку список дробной части
-        n = 0 # счётчик, не позволяющий добавить в дробную часть больше знаков, чем SIGNS_COMMA_LIMIT (см. cfg.py)
-        while n <= SIGNS_COMMA_LIMIT and mul > 0:
-            table.append([mul])
-            mul *= nums # умножение дробной части на основание системы
-            table[-1] = table[-1] + [nums, mul, int(mul)]
-            arr.append(int(mul)) # добавить целую часть от умножения в список
-            mul = float('0.' + ''.join([str(elt) for elt in _nums._get_frct(mul)]))
-            n += 1
-
-        return table
-
-    def to_dec(self, nums=None, numb=None, intg=None, is_fract=False):
-        mode = -1 if is_fract else 1 # множитель степени
-        intgs = None # строковое значение целой/дробной части
-        if numb == None and not intg == None and not nums == None:
-            intgs = str(intg)
-            nums = int(nums)
-        elif intg == None and not numb == None:
-            arr = numb.frct if is_fract else numb.intg
-            intgs = str(''.join([str(elt) for elt in arr]))
-            nums = numb.nums
-        else:
-            raise NotEnoughArgumentsException()
-
-        table = []
-
-        intgs = ''.join([char for char in intgs])
-        intgs = intgs if is_fract else intgs[::-1]
-        num = 0 # переведённое значение в nums-СС
-        grade = 1 if is_fract else 0 # степень возведения для каждого знака
-        for char in intgs:
-            num += int(_nums._inter_sign_to_num(char)) * nums ** (mode * grade)
-            table.append([char, nums, (mode * grade)])
-            grade += 1
-        if 'e' in str(num) and is_fract:
-            num = _nums._get_frct(num)
-        else:
-            num = str(''.join(_nums._get_frct(num)) if is_fract else num)
-
-        return table
 
 class MainApp(App):
     answer = None
@@ -149,6 +41,9 @@ class MainApp(App):
         self.expression_ti.bind(size=self.expression_ti.setter('text_size'))
         self.answer_ti.bind(size=self.answer_ti.setter('text_size'))
 
+        self.convertions_menu_btn.on_release = self.open_conv_mv
+        self.commands_executions_menu_btn.on_release = self.open_command_mv
+
         self.answer_nums = 10
         self.answer = _numb(0)
 
@@ -173,6 +68,8 @@ class MainApp(App):
         convertions_menu_al = AnchorLayout(size_hint=STYLES['convertions_menu_al']['sh'], anchor_x='left', anchor_y='center')
         convertions_menu_btn = Button(text='...')
         convertions_menu_al.add_widget(convertions_menu_btn)
+        self.convertions_menu_btn = convertions_menu_btn
+        self.conv_mv = ConvertionModalview()
 
 
         line_al = AnchorLayout(size_hint=STYLES['line_al']['sh'], anchor_x='center', anchor_y='center')
@@ -198,6 +95,8 @@ class MainApp(App):
         commands_executions_menu_al = AnchorLayout(size_hint=STYLES['commands_executions_menu_al']['sh'], anchor_x='right', anchor_y='center')
         commands_executions_menu_btn = Button(text='...')
         commands_executions_menu_al.add_widget(commands_executions_menu_btn)
+        self.command_execution_mv = CommandExecutionModalView()
+        self.commands_executions_menu_btn = commands_executions_menu_btn
 
 
         middle_hb = BoxLayout(orientation='horizontal', size_hint=STYLES['middle_hb']['sh'])
@@ -259,10 +158,8 @@ class MainApp(App):
         main_layout.add_widget(keyboard_al)
         main_layout.add_widget(functional_tab_hb)
 
-
         self.keyboard_gl = keyboard_gl
         self.fill_keyboard()
-
 
         self.main_layout = main_layout
 
@@ -371,10 +268,23 @@ class MainApp(App):
         for sign in self._interface_.signs:
             if type(sign).__name__ == '_numb':
                 if not sign.nums == 10:
-                    self.conv_tables.append(ConvertionTable(sign.nums, 10, sign))
+                    numb = _numb(0)
+                    numb._apply_numb_properties_to_self(sign)
+                    self.conv_tables.append(ConvertionTable(sign.nums, 10, numb))
+
+    def open_conv_mv(self):
+        self.conv_mv.set_conv_tables(self.conv_tables + self.ans_conv_table)
+        self.conv_mv.fill()
+        self.conv_mv.open()
+
+    def open_command_mv(self):
+        self.command_execution_mv.set_commands(self._commander_.commands_history)
+        self.command_execution_mv.fill()
+        self.command_execution_mv.open()
 
     def output(self):
         self.expression_ti.text = ''
+        self._commander_._clear_history()
         CS = CURSOR_SIGN_FORMATTED
         cursor = self._interface_.cursor
         subcursor = self._interface_.subcursor
@@ -382,8 +292,6 @@ class MainApp(App):
         signs = self._interface_.signs
         is_numb = self._interface_.is_numb
         is_frct = self._interface_.is_frct
-        answer_nums = self.answer_nums
-        answer_text = '...'
         is_cursor_inserted = False
         # заполнение выражения
         text = ''
@@ -426,53 +334,37 @@ class MainApp(App):
                 text = f'{text} {CS} '
 
         self.expression_ti.text = text
+        self.fill_answer()
 
-        # заполнение ответа
+    def fill_answer(self):
         self.fill_conv_table()
         self.ans_conv_table = []
+        answer_text = '...'
         try:
             answer = _numb(0)
             answer._apply_numb_properties_to_self(self._commander_._execute_interface_expression(self._interface_))
             self.answer = answer
-
             if answer.nums != self.answer_nums:
-                _answer = answer
+                _answer = _numb(0)
+                _answer._apply_numb_properties_to_self(answer)
                 if answer.nums != 10:
-                    self.ans_conv_table.append(ConvertionTable(answer.nums, 10, answer))
+                    self.ans_conv_table.append(ConvertionTable(answer.nums, 10, _answer))
                     _answer._apply_numb_properties_to_self(_nums._convert_to_dec(_answer))
                 if self.answer_nums != 10:
-                    self.ans_conv_table.append(ConvertionTable(10, self.answer_nums, _answer))
-
-            print('**************')
-            answer.info()
-            if answer.nums != answer_nums:
-                answer._convert_to(answer_nums)
-            # answer.info()
+                    answer_ = _numb(0)
+                    answer_._apply_numb_properties_to_self(_answer)
+                    self.ans_conv_table.append(ConvertionTable(10, self.answer_nums, answer_))
+            if answer.nums != self.answer_nums:
+                answer._convert_to(self.answer_nums)
             answer_text = str(answer)
         except Exception as exc:
             logging.critical('MainApp.output cought exception:')
             logging.critical(exc)
             self.answer = None
             self.ans_conv_table = []
-
         self.answer_ti.text = str(answer_text)
 
-        print('======================================================================================================')
-
-        for convtable in self.conv_tables:
-            print(convtable.table)
-            print(convtable.table_frct)
-            print(convtable.result)
-            print('-----------------')
-        if self.ans_conv_table != None:
-            print('-ans-')
-            for anstable in self.ans_conv_table:
-                print(anstable.table)
-                print(anstable.table_frct)
-                print(anstable.result)
-                print('-----------------')
-
-        return text, answer_text
+        return answer_text
 
 if __name__ == '__main__':
     MainApp().run()

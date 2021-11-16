@@ -1,8 +1,13 @@
 from kivy_modalview import ModalView
-from cfg import STYLES
+from cfg import STYLES, _inter_to_letters, LATIN_ALPHABET, _inter_sign_to_num
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.label import Label
+from kivy.uix.anchorlayout import AnchorLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.scrollview import ScrollView
 
 class KeyboardButton(Button):
     """
@@ -109,3 +114,137 @@ class ModalviewIntTextinput(NumsTextInput):
         super().__init__(
             font_size=STYLES['modalview_int_textinput']['fz'],
             size_hint=STYLES['modalview_int_textinput']['sh'])
+
+class ConvertionModalview(ModalView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.initial_build()
+        self.conv_tables = []
+
+    def initial_build(self):
+        self.size_hint = [0.8, 0.95]
+        layout = BoxLayout(orientation='vertical')
+        sv = ScrollView(size_hint=[0.95, 0.9])
+        root = GridLayout(cols=1, size_hint_y=None)
+        sv.add_widget(root)
+
+        self.sv = sv
+        root.bind(minimum_height=root.setter('height'))
+        self.root = root
+
+        btn_close_al = AnchorLayout(anchor_x='center', anchor_y='bottom', size_hint=[1, 0.05])
+        btn_close = Button(text='Close')
+        btn_close.on_release = self.dismiss
+        
+        sv_al = AnchorLayout(anchor_x='center', anchor_y='top')
+        sv_al.add_widget(sv)
+        layout.add_widget(sv_al)
+        btn_close_al.add_widget(btn_close)
+        layout.add_widget(btn_close_al)
+        self.add_widget(layout)
+
+    def set_conv_tables(self, conv_tables):
+        self.conv_tables = conv_tables
+
+    def fill(self):
+        self.clear_widgets()
+        self.initial_build()
+        for i, conv_table in enumerate(self.conv_tables):
+            if not conv_table.numb.nums == conv_table.result.nums:
+                bl = BoxLayout(orientation='vertical', size_hint_y=None)
+                bl.bind(minimum_height=bl.setter('height'))
+
+                if conv_table.mode == 'to_dec':
+                    sum = ' + '.join([f'{x[0]}{f"({_inter_sign_to_num(x[0])})" if x[0] in LATIN_ALPHABET else ""} × {x[1]}[sup]{x[2]}[/sup]' for x in conv_table.table + conv_table.table_frct])
+                    label = Label(text=f'{str(conv_table.numb)} -> {str(conv_table.result)}\n{sum} = {str(conv_table.result)}', markup=True, size_hint_y=None, height=300)
+                    label.bind(size=label.setter('text_size'))
+                    bl.add_widget(label)
+                elif conv_table.mode == 'from_dec':
+                    label = Label(text=f'(integer) {str(conv_table.numb)} -> {str(conv_table.result)}', markup=True, size_hint_y=None)
+                    label.bind(size=label.setter('text_size')) 
+
+                    gd_intg = GridLayout(cols=4, size_hint_y=None)
+                    gd_intg.bind(minimum_height=gd_intg.setter('height'))
+
+                    gd_intg.add_widget(Label(text='devided', size_hint_y=None))
+                    gd_intg.add_widget(Label(text='devider', size_hint_y=None))
+                    gd_intg.add_widget(Label(text='integer', size_hint_y=None))
+                    gd_intg.add_widget(Label(text='remainder', size_hint_y=None))
+
+                    for row in conv_table.table:
+                        if [int(row[0]), int(row[2]), int(row[3])] == [0, 0, 0]:
+                            continue
+                        for i, x in enumerate(row):
+                            l = Label(size_hint_y=None, halign='right', height=150, markup=True)
+                            text = f'{str(x)}{f"({_inter_to_letters([x])[0]})" if int(x) > 9 and i == 3 else ""}'
+                            text = f'[b]{text}[/b]' if i == 3 else text
+                            l.text = text
+                            l.bind(size=l.setter('text_size'))
+                            gd_intg.add_widget(l)
+
+                    bl.add_widget(label)
+                    bl.add_widget(gd_intg)
+                    if not conv_table.table_frct == []:
+                        label_frct = Label(text=f'(fraction) {str(conv_table.numb)} -> {str(conv_table.result)}', markup=True, size_hint_y=None)
+                        label_frct.bind(size=label_frct.setter('text_size'))
+
+                        gd_frct = GridLayout(cols=4, size_hint_y=None)
+                        gd_frct.bind(minimum_height=gd_frct.setter('height'))
+                    
+                        gd_frct.add_widget(Label(text='fraction', size_hint_y=None))
+                        gd_frct.add_widget(Label(text='multiplier', size_hint_y=None))
+                        gd_frct.add_widget(Label(text='product', size_hint_y=None))
+                        gd_frct.add_widget(Label(text='integer', size_hint_y=None))
+
+                        for row in conv_table.table_frct:
+                            for x in row:
+                                gd_frct.add_widget(Label(text=str(x), height=50, size_hint_y=None, halign='center'))
+
+                        bl.add_widget(label_frct)
+                        bl.add_widget(gd_frct)
+
+                if i > 0:
+                    self.root.add_widget(Label(height=50, text='––––––––––––––––––––––––––––––', size_hint_y=None))
+                self.root.add_widget(bl)
+
+class CommandExecutionModalView(ModalView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.initial_build()
+        self.commands = []
+
+    def initial_build(self):
+        self.size_hint = [0.8, 0.95]
+        layout = BoxLayout(orientation='vertical')
+        sv = ScrollView(size_hint=[0.95, 0.9])
+        root = GridLayout(cols=1, size_hint_y=None)
+        sv.add_widget(root)
+
+        self.sv = sv
+        root.bind(minimum_height=root.setter('height'))
+        self.root = root
+
+        btn_close_al = AnchorLayout(anchor_x='center', anchor_y='bottom', size_hint=[1, 0.05])
+        btn_close = Button(text='Close')
+        btn_close.on_release = self.dismiss
+        
+        sv_al = AnchorLayout(anchor_x='center', anchor_y='top')
+        sv_al.add_widget(sv)
+        layout.add_widget(sv_al)
+        btn_close_al.add_widget(btn_close)
+        layout.add_widget(btn_close_al)
+        self.add_widget(layout)
+
+    def set_commands(self, commands):
+        self.commands = commands
+
+    def fill(self):
+       self.clear_widgets()
+       self.initial_build()
+       for i, command_execution in enumerate(self.commands):
+            bl = BoxLayout(orientation='vertical', size_hint_y=None)
+            bl.bind(minimum_height=bl.setter('height'))
+            label = Label(text=f'{i+1}. {command_execution.left_operand} {command_execution.command} {command_execution.right_operand} = {command_execution.result}', markup=True, halign='center')
+            label.bind(size=label.setter('text_size'))
+            bl.add_widget(label)
+            self.root.add_widget(bl)

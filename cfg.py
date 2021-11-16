@@ -218,3 +218,24 @@ def get_command_analogue(value, is_gui_analogue=True): # is_gui_analogue = <bool
             if val == value:
                 return key
     return value
+
+
+def _get_elt_by_i(arr, i): # получить элемент в arr по индексу i
+    i = int(abs(i))
+    if len(arr) > i:
+        return arr[i]
+    return None
+
+def _inter_to_letters(arr): # сменить числа больше 9 на буквенный эквивалент в списке arr
+    _arr = []
+    for x in arr:
+        if x > 9:
+            _arr.append(_get_elt_by_i(LATIN_ALPHABET, x - 10))
+            continue
+        _arr.append(x)
+    return _arr
+
+def _inter_sign_to_num(sign): # сменить буквенный эквивалент десятичного числа на само число для sign
+    if sign in LATIN_ALPHABET:
+        return str(SIGN_ALPHABET[LATIN_ALPHABET.index(sign)])
+    return str(sign)
