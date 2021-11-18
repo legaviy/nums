@@ -44,10 +44,14 @@ class MainApp(App):
         self.convertions_menu_btn.on_release = self.open_conv_mv
         self.commands_executions_menu_btn.on_release = self.open_command_mv
 
+        self.undo_btn.on_release = self.undo
+        self.redo_btn.on_release = self.redo
+
         self.answer_nums = 10
         self.answer = _numb(0)
 
         self.output()
+        self._interface_._save()
 
         return self.main_layout
 
@@ -60,9 +64,15 @@ class MainApp(App):
         self.changing_mv_ti = self.changing_mv.ti
         self.changing_mv_btn_ok = self.changing_mv.btn_ok
 
-        settings_menu_al = AnchorLayout(size_hint=STYLES['settings_menu_al']['sh'])
-        settings_menu_btn = Button(text='...')
-        settings_menu_al.add_widget(settings_menu_btn)
+        history_menu_al = AnchorLayout(size_hint=STYLES['history_menu_al']['sh'])
+        history_menu_bl = BoxLayout(orientation='horizontal')
+        undo_btn = Button(text='undo')
+        redo_btn = Button(text='redo')
+        history_menu_bl.add_widget(undo_btn)
+        history_menu_bl.add_widget(redo_btn)
+        history_menu_al.add_widget(history_menu_bl)
+        self.undo_btn = undo_btn
+        self.redo_btn = redo_btn
 
 
         convertions_menu_al = AnchorLayout(size_hint=STYLES['convertions_menu_al']['sh'], anchor_x='left', anchor_y='center')
@@ -153,7 +163,7 @@ class MainApp(App):
         keyboard_al.add_widget(keyboard_gl)
 
         main_layout = BoxLayout(orientation='vertical')
-        main_layout.add_widget(settings_menu_al)
+        main_layout.add_widget(history_menu_al)
         main_layout.add_widget(middle_hb)
         main_layout.add_widget(keyboard_al)
         main_layout.add_widget(functional_tab_hb)
@@ -185,10 +195,13 @@ class MainApp(App):
                     return
             self._interface_._input(get_command_analogue(value, False))
             self.output()
+            self._interface_._save()
         elif instance.action == 'changing_pos': # обработчики нестандартных кнопок
             self.change_positive_of_numb()
+            self._interface_._save()
         elif instance.action == 'applying_answer':
             self.apply_answer()
+            self._interface_._save()
 
     def offset_left(self):
         self._interface_._offset(False)
@@ -209,10 +222,12 @@ class MainApp(App):
     def clear_signs(self):
         self._interface_._clear()
         self.output()
+        self._interface_._save()
 
     def backspace(self):
         self._interface_._delete()
         self.output()
+        self._interface_._save()
 
     def change_nums(self):
         nums = self.changing_mv_ti.saved_value
@@ -224,6 +239,7 @@ class MainApp(App):
             self.changing_mv.dismiss_mv()
             self.changing_mv_ti.saved_value = '10'
             self.output()
+            self._interface_._save()
 
     def convert_nums(self):
         nums = self.convertion_mv_ti.saved_value
@@ -235,6 +251,7 @@ class MainApp(App):
             self.convertion_mv.dismiss_mv()
             self.convertion_mv_ti.saved_value = '10'
             self.output()
+            self._interface_._save()
 
     def change_positive_of_numb(self):
         if self._interface_.is_numb:
@@ -243,6 +260,7 @@ class MainApp(App):
 
     def apply_answer(self):
         if not self.answer == None:
+            self._interface_._save()
             self._interface_._clear()
             self._interface_.signs = [self.answer]
             self.offset_to_end()
@@ -268,8 +286,7 @@ class MainApp(App):
         for sign in self._interface_.signs:
             if type(sign).__name__ == '_numb':
                 if not sign.nums == 10:
-                    numb = _numb(0)
-                    numb._apply_numb_properties_to_self(sign)
+                    numb = _numb(sign)
                     self.conv_tables.append(ConvertionTable(sign.nums, 10, numb))
 
     def open_conv_mv(self):
@@ -281,6 +298,14 @@ class MainApp(App):
         self.command_execution_mv.set_commands(self._commander_.commands_history)
         self.command_execution_mv.fill()
         self.command_execution_mv.open()
+
+    def undo(self):
+        self._interface_._offset_history_step(True)
+        self.output()
+
+    def redo(self):
+        self._interface_._offset_history_step(False)
+        self.output()
 
     def output(self):
         self.expression_ti.text = ''
@@ -341,18 +366,15 @@ class MainApp(App):
         self.ans_conv_table = []
         answer_text = '...'
         try:
-            answer = _numb(0)
-            answer._apply_numb_properties_to_self(self._commander_._execute_interface_expression(self._interface_))
+            answer = _numb(self._commander_._execute_interface_expression(self._interface_))
             self.answer = answer
             if answer.nums != self.answer_nums:
-                _answer = _numb(0)
-                _answer._apply_numb_properties_to_self(answer)
+                _answer = _numb(answer)
                 if answer.nums != 10:
                     self.ans_conv_table.append(ConvertionTable(answer.nums, 10, _answer))
                     _answer._apply_numb_properties_to_self(_nums._convert_to_dec(_answer))
                 if self.answer_nums != 10:
-                    answer_ = _numb(0)
-                    answer_._apply_numb_properties_to_self(_answer)
+                    answer_ = _numb(_answer)
                     self.ans_conv_table.append(ConvertionTable(10, self.answer_nums, answer_))
             if answer.nums != self.answer_nums:
                 answer._convert_to(self.answer_nums)

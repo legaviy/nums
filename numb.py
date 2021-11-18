@@ -1,4 +1,4 @@
-from cfg import WrongType, LATIN_ALPHABET, SIGN_ALPHABET, NotEnoughArgumentsException, SIGNS_COMMA_LIMIT, WrongNumeralSystem
+from cfg import WrongType, LATIN_ALPHABET, SIGN_ALPHABET, NotEnoughArgumentsException, SIGNS_COMMA_LIMIT, WrongNumeralSystem, STYLES
 
 class _nums: # класс статических методов для перевода чисел и вспомогательных статических методов
     @staticmethod        
@@ -192,7 +192,9 @@ class _numb: # число в nums'ной системе счисления
     frct = None # список знаков дробной части числа
     nums = 10 # значение основания системы счисления числа
     def __init__(self, dec=None, pos=True, intg=None, frct=None, nums=10):
-        if dec == None and not None in [pos, intg, frct, nums]: # если введены свойства, описывающие экземляр, то присвоить ему эти свойства
+        if type(dec).__name__ == '_numb':
+            self._apply_numb_properties_to_self(dec)
+        elif dec == None and not None in [pos, intg, frct, nums]: # если введены свойства, описывающие экземляр, то присвоить ему эти свойства
             self.pos = pos 
             self.intg = intg
             self.frct = frct
@@ -219,16 +221,16 @@ class _numb: # число в nums'ной системе счисления
         return '' if self.pos else '-'
 
     def _get_nums_subscriber(self):
-        return f'[size=20]{self.nums}[/size]'
+        return f'[size={STYLES["nums_size"]}]{self.nums}[/size]'
 
     def __str__(self): # строковое представление числа
         return f'{self._get_pos_str()}{self._get_intg_str()},{self._get_frct_str()}{self._get_nums_subscriber()}'
 
     def _apply_numb_properties_to_self(self, numb): # применить к данному экземпляру свойства экземпляра numb
-        self.pos = numb.pos
-        self.intg = numb.intg
-        self.frct = numb.frct
-        self.nums = numb.nums
+        self.pos = bool(numb.pos)
+        self.intg = list(numb.intg)
+        self.frct = list(numb.frct)
+        self.nums = int(numb.nums)
 
     def _convert_to_dec(self): # конвертировать данный экземпляр в 10-СС
         self._apply_numb_properties_to_self(_nums._convert_to_dec(self))

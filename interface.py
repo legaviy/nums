@@ -107,6 +107,35 @@ class ConvertionTable:
 
         return table
 
+def _new_sign_list(signs):
+    arr = []
+    for sign in signs:
+        if type(sign).__name__ == '_numb':
+            arr.append(_numb(sign))
+        else:
+            arr.append(sign)
+    return arr
+
+class _history_step:
+    cursor = 0
+    subcursor = 0
+    numbcursor = 0
+    is_frct = False # курсор находится на числе И курсор (numbcursor) находится в дробной части числа
+    is_numb = True # курсор находится на числе
+    signs = None # список знаков в строке
+    prev_step = None
+    next_step = None
+    def __init__(self, interface, prev_step):
+        self.prev_step = prev_step
+        self.cursor = interface.cursor
+        self.subcursor = interface.subcursor
+        self.numbcursor = interface.numbcursor
+        self.is_frct = interface.is_frct
+        self.is_numb = interface.is_numb
+        self.signs = _new_sign_list(interface.signs)
+        if not prev_step == None:
+            self.prev_step.next_step = self
+
 class _command_execution: # выполнение команды, включающее в себя команда, два соответсвтующее ей операнда, и результат операции
     command = None
     left_operand = None
@@ -274,10 +303,12 @@ class _interface: # класс ввода выражения
     numbcursor = 0
     is_frct = False # курсор находится на числе И курсор (numbcursor) находится в дробной части числа
     is_numb = True # курсор находится на числе
-    signs = None # список знаков в строке
+    signs = [] # список знаков в строке
+    history_step = None
 
     def __init__(self):
         self._clear()
+        self.history_step = _history_step(self, None)
 
     def _print_signs(self):
         s = ''
@@ -292,7 +323,7 @@ class _interface: # класс ввода выражения
         self.subcursor = 0
         self.numbcursor = 0
         self.is_frct = False
-        self.is_numb = True 
+        self.is_numb = True
 
     def _offset(self, is_to_right=True): # сместить курсор: вправо (вперёд) при is_to_right=True, влево (назад) при is_to_right=False
         if self.is_numb:
@@ -447,6 +478,20 @@ class _interface: # класс ввода выражения
                 self.numbcursor = 0
         else:
             raise(WrongNumeralSystem('2-36', nums))
+
+    def _save(self): # сохранить текущее выражение в историю изменений
+        self.history_step = _history_step(self, self.history_step)
+
+    def _offset_history_step(self, is_undo=True):
+        history_step = self.history_step.prev_step if is_undo and not self.history_step.prev_step == None else (self.history_step.next_step if not self.history_step.next_step == None and not is_undo else None)
+        if not history_step == None:
+            self.cursor = history_step.cursor
+            self.subcursor = history_step.subcursor
+            self.numbcursor = history_step.numbcursor
+            self.is_frct = history_step.is_frct
+            self.is_numb = history_step.is_numb
+            self.signs = _new_sign_list(history_step.signs)
+            self.history_step = history_step
 
 _commander_ = _commander()
 _interface_ = _interface()

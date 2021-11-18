@@ -85,6 +85,7 @@ KEYS_ANALOGUES = {
   # command: программное представление команды; gui_analogue: представление команды в ГПИ
 
 STYLES = {
+    'nums_size': 20,
     'keyboard_btn':
         {
             'fz': '20sp',
@@ -134,7 +135,7 @@ STYLES = {
             'fz': '35sp'
         },
 
-    'settings_menu_al':
+    'history_menu_al':
         {
             'sh': [1, 0.05]
         },
