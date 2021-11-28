@@ -1,5 +1,5 @@
 from kivy_modalview import ModalView
-from cfg import STYLES, _inter_to_letters, LATIN_ALPHABET, _inter_sign_to_num
+from cfg import STYLES, _inter_to_letters, LATIN_ALPHABET, _inter_sign_to_num, KEYS_ICONS
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
@@ -8,6 +8,8 @@ from kivy.uix.label import Label
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.image import Image
+from kivy.graphics import *
 
 class KeyboardButton(Button):
     """
@@ -22,6 +24,8 @@ class KeyboardButton(Button):
             font_size=STYLES['keyboard_btn']['fz'])
         self.is_default = is_default
         self.action = action
+        # if self.text in KEYS_ICONS:
+        #     self.text = ''
 
 class FunctionalButton(Button):
         def __init__(self, text):

@@ -454,6 +454,10 @@ class _interface: # класс ввода выражения
                         # сместить курсор в предыдущий промежуток
                         self.cursor -= 1
                         self.subcursor -= 1
+                if not (self.cursor == self.subcursor):
+                    self.is_numb = False
+                    self.is_frct = False
+                    self.numbcursor = 0
                 
     def _change_nums(self, nums): # сменить СС текущего числа ИЛИ добавить число в промежуток с nums-СС
         if 1 < nums < 37:

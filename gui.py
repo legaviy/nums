@@ -4,12 +4,14 @@ from kivy_elements import (CommandExecutionModalView, ConvertionModalview, Keybo
 from cfg import CURSOR_SIGN_FORMATTED, LATIN_ALPHABET, logging, CURSOR_SIGN_FORMATTED, KEYBOARD_KEYS, KEYS_IS_DEFAULT_EXCEPTIONS, get_command_analogue, STYLES
 from interface import ConvertionTable
 from numb import _nums, _numb
+from kivy.graphics import Color, Rectangle
 
 class MainApp(App):
     answer = None
     answer_nums = 10
     conv_tables = []
     ans_conv_table = []
+    buffer = None
 
     def build(self):
         self.build_interface()
@@ -90,7 +92,7 @@ class MainApp(App):
 
         answer_bl = BoxLayout(orientation='horizontal', size_hint=STYLES['answer_bl']['sh'])
         answer_ti = Label(font_size=STYLES['answer_ti']['fz'], size_hint=STYLES['answer_ti']['sh'], halign='left', valign='top', markup=True)
-        answer_nums_ti = NumsTextInput(font_size=STYLES['answer_nums_ti']['fz'], background_color=STYLES['answer_nums_ti']['bgc'], size_hint=STYLES['answer_nums_ti']['sh'], text='10')
+        answer_nums_ti = NumsTextInput(font_size=STYLES['answer_nums_ti']['fz'], background_color=STYLES['answer_nums_ti']['bgc'], size_hint=STYLES['answer_nums_ti']['sh'], text='10', foreground_color=(3,3,3))
         answer_bl.add_widget(answer_ti)
         answer_bl.add_widget(answer_nums_ti)
         answer_nums_ti.bind(text=self.on_answer_nums)
@@ -119,9 +121,9 @@ class MainApp(App):
 
         cursor_offset_left_btn = FunctionalButton('<-')
         cursor_offset_left_btn.size_hint = STYLES['cursor_offset_left_btn']['sh']
-        convert_btn = FunctionalButton('conv')
+        convert_btn = FunctionalButton('convert')
         convert_btn.on_release = self.convertion_mv.open
-        change_btn = FunctionalButton('change')
+        change_btn = FunctionalButton('change/add')
         change_btn.on_release = self.changing_mv.open
         backspace_btn = FunctionalButton('backspace')
         cursor_offset_right_btn = FunctionalButton('->')
@@ -202,6 +204,12 @@ class MainApp(App):
         elif instance.action == 'applying_answer':
             self.apply_answer()
             self._interface_._save()
+        elif instance.action == 'cut':
+            self.cut()
+        elif instance.action == 'copy':
+            self.copy()
+        elif instance.action == 'paste':
+            self.paste()
 
     def offset_left(self):
         self._interface_._offset(False)
@@ -306,6 +314,32 @@ class MainApp(App):
     def redo(self):
         self._interface_._offset_history_step(False)
         self.output()
+
+    def copy(self):
+        if self._interface_.is_numb and self._interface_.cursor == self._interface_.subcursor:
+            self.buffer = _numb(self._interface_.signs[self._interface_.cursor])
+    
+    def cut(self):
+        if self._interface_.cursor == self._interface_.subcursor and self._interface_.is_numb:
+            self.copy()
+            self._interface_.signs.pop(self._interface_.cursor) # удалить знак из списка
+            if self._interface_.cursor == 0 and len(self._interface_.signs) == 0: # если курсор находится в начале строки
+                self._interface_._clear()
+            else:
+                self._interface_.cursor -= 1 # сместить курсор в предыдущий промежуток
+            if not (self._interface_.cursor == self._interface_.subcursor):
+                self._interface_.is_numb = False
+                self._interface_.is_frct = False
+                self._interface_.numbcursor = 0
+            self.output()
+            self._interface_._save()
+
+    def paste(self):
+        if (not self._interface_.cursor == self._interface_.subcursor) and not self._interface_.is_numb:
+            self._interface_._change_nums(10)
+            self._interface_.signs[self._interface_.cursor]._apply_numb_properties_to_self(self.buffer)
+            self.output()
+            self._interface_._save()
 
     def output(self):
         self.expression_ti.text = ''

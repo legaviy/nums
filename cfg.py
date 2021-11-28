@@ -68,11 +68,14 @@ KEYBOARD_KEYS = ['1', '2', '3', 'A', 'B', 'C', 'D', 'E',
                  '7', '8', '9', 'K', 'L', 'M', 'N', 'O',
                  '(', '0', ')', 'P', 'Q', 'R', 'S', 'T',
                  '+', '-', '×', 'U', 'V', 'W', 'X', 'Y',
-                 '/', '^', '±', 'Z', '=', ' ', ' ', ' ',] # надписи кнопок основной клавиатуры
+                 '/', '^', '±', 'Z', '=', 'cut', 'copy', 'paste',] # надписи кнопок основной клавиатуры
 
 KEYS_IS_DEFAULT_EXCEPTIONS = {
     '±': 'changing_pos',
     '=': 'applying_answer',
+    'cut': 'cut',
+    'copy': 'copy',
+    'paste': 'paste'
 } # словарь надписей нестандартных кнопок и соответствующие им названия их действий (см. gui.py:MyApp:on_keyboard_btn_pressed); 
   # <<key:str>, <action:str>>
   # key: надпись кнопки; action: название действия, которой соответствует кнопка с надписью key
@@ -83,6 +86,14 @@ KEYS_ANALOGUES = {
 } # словарь команд и соответствующие им аналогичные представления в графическом интерфейсе
   # <<command:str>, <gui_analogue>>
   # command: программное представление команды; gui_analogue: представление команды в ГПИ
+
+KEYS_ICONS = {
+    'cut': 'icons/cut.png',
+    'copy': 'icons/copy.png',
+    'paste': 'icons/paste.png'
+} # словарь иконок нестандартных кнопок и соответствующие им названия их действий 
+  # <<key:str>, <img:str>>
+  # key: надпись кнопки; img: ссылка на иконку кнопки
 
 STYLES = {
     'nums_size': 20,
@@ -175,7 +186,7 @@ STYLES = {
     
     'answer_nums_ti':
         {
-            'bgc': (1, 1, 1),
+            'bgc': (0, 0, 0),
             'sh': [0.2, 1],
             'fz': '30sp',
         },
@@ -219,7 +230,6 @@ def get_command_analogue(value, is_gui_analogue=True): # is_gui_analogue = <bool
             if val == value:
                 return key
     return value
-
 
 def _get_elt_by_i(arr, i): # получить элемент в arr по индексу i
     i = int(abs(i))
